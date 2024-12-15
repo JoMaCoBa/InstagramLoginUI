@@ -8,4 +8,4 @@ This Project demostrates modern UI design and serves as a practice for working w
 * **Android Studio:** IDE used for development.
 
 ## 📸 Screenshots
-![LoginUI](https://github.com/user-attachments/assets/36912d09-cafe-416a-a33a-5e84b5b03f32){ width="800" height="600" style="display: block; margin: 0 auto" }
+![LoginUI](https://github.com/user-attachments/assets/36912d09-cafe-416a-a33a-5e84b5b03f32)
