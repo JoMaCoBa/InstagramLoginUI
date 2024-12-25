@@ -1,7 +1,6 @@
-package com.jomacoba.instagramloginui
+package com.jomacoba.instagramloginui.login.presentation
 
 import android.app.Activity
-import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -24,6 +22,7 @@ import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -33,12 +32,12 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -49,18 +48,23 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.util.regex.Pattern
+import com.jomacoba.instagramloginui.R
 
 @Composable
-fun LoginScreen(modifier: Modifier) {
+fun LoginScreen(loginViewModel: LoginViewModel, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        Header(modifier = Modifier.align(Alignment.TopEnd))
-        Body(modifier = Modifier.align(Alignment.Center))
-        Footer(modifier = Modifier.align(Alignment.BottomCenter))
+        val isLoading: Boolean by loginViewModel.isLoading.observeAsState(initial = false)
+        if (isLoading) {
+            CircularProgressIndicator(Modifier.align(Alignment.Center))
+        } else {
+            Header(modifier = Modifier.align(Alignment.TopEnd))
+            Body(modifier = Modifier.align(Alignment.Center), loginViewModel = loginViewModel)
+            Footer(modifier = Modifier.align(Alignment.BottomCenter))
+        }
     }
 }
 
@@ -81,16 +85,24 @@ fun Header(modifier: Modifier) {
 }
 
 @Composable
-fun Body(modifier: Modifier) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun Body(modifier: Modifier, loginViewModel: LoginViewModel) {
+    val email: String by loginViewModel.email.observeAsState(initial = "")
+    val password: String by loginViewModel.password.observeAsState(initial = "")
+    val loginEnable: Boolean by loginViewModel.loginEnable.observeAsState(initial = false)
+
     Column(modifier = modifier) {
         ImageLogin(modifier = Modifier.align(Alignment.CenterHorizontally))
-        Email(email = email, onValueChange = { email = it })
-        Password(password = password, onValueChange = { password = it })
+        Email(
+            email = email,
+            onValueChange = { loginViewModel.onLoginChanged(it, password) }
+        )
+        Password(
+            password = password,
+            onValueChange = { loginViewModel.onLoginChanged(email, it) }
+        )
         ForgotPassword(modifier = Modifier.align(Alignment.End))
         Spacer(modifier = Modifier.size(16.dp))
-        LoginButton(loginEnable = LoginValidation(email, password))
+        LoginButton(loginEnable = loginEnable, loginViewModel = loginViewModel)
         Spacer(modifier = Modifier.size(16.dp))
         LoginDivider()
         Spacer(modifier = Modifier.size(32.dp))
@@ -182,9 +194,9 @@ fun ForgotPassword(modifier: Modifier) {
 }
 
 @Composable
-fun LoginButton(loginEnable: Boolean) {
+fun LoginButton(loginEnable: Boolean, loginViewModel: LoginViewModel) {
     Button(
-        onClick = { /*TODO*/ },
+        onClick = { loginViewModel.onLoginSelected() },
         enabled = loginEnable,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(6.dp),
@@ -294,7 +306,3 @@ fun SignUp() {
         }
     }
 }
-
-
-fun LoginValidation(email: String, password: String): Boolean =
-    (Patterns.EMAIL_ADDRESS.matcher(email).matches() && password.length >= 6)
